@@ -9,3 +9,13 @@ files = {
         ],
     }
 }
+
+tftp_root = node.metadata.get('tftp', {}).get('root', '/srv/tftp/').rstrip('/')
+
+directories = {
+    node.metadata.get('tftp', {}).get('root', '/srv/tftp/').rstrip('/'): {
+        'mode': '755',
+        'owner': 'root',
+        'group': 'root',
+    },
+}

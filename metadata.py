@@ -7,9 +7,6 @@ def add_apt_packages(metadata):
         metadata['apt']['packages']['update-inetd'] = {
             'installed': True,
         }
-        metadata['apt']['packages']['ntp'] = {
-            'installed': True,
-        }
         metadata['apt']['packages']['tftpd'] = {
             'installed': True,
             'needs': [
