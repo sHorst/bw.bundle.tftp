@@ -1,42 +1,46 @@
-@metadata_processor
-def add_apt_packages(metadata):
-    if node.has_bundle("apt"):
-        metadata.setdefault('apt', {})
-        metadata['apt'].setdefault('packages', {})
-
-        metadata['apt']['packages']['update-inetd'] = {
-            'installed': True,
+defaults = {}
+if node.has_bundle("apt"):
+    defaults = {
+        'apt': {
+            'packages': {
+                'update-inetd': {'installed': True},
+                'tftpd': {
+                    'installed': True,
+                    'needs': [
+                        'pkg_apt:update-inetd',
+                    ]
+                },
+            }
         }
-        metadata['apt']['packages']['tftpd'] = {
-            'installed': True,
-            'needs': [
-                'pkg_apt:update-inetd',
-            ]
-        }
-
-    return metadata, DONE
+    }
 
 
-@metadata_processor
+@metadata_reactor
 def add_iptables_rules(metadata):
-    if node.has_bundle("iptables"):
-        interfaces = ['main_interface']
-        interfaces += metadata.get('tftp', {}).get('additional_interfaces', [])
+    if not node.has_bundle("iptables"):
+        raise DoNotRunAgain
 
-        for interface in interfaces:
-            metadata += repo.libs.iptables.accept(). \
-                input(interface). \
-                state_new(). \
-                udp(). \
-                dest_port(69)
+    interfaces = ['main_interface']
+    interfaces += metadata.get('tftp/additional_interfaces', [])
 
-    return metadata, DONE
+    iptables_rules = {}
+    for interface in interfaces:
+        iptables_rules += repo.libs.iptables.accept(). \
+            input(interface). \
+            state_new(). \
+            udp(). \
+            dest_port(69)
+
+    return iptables_rules
 
 
-@metadata_processor
+@metadata_reactor
 def add_restic_rules(metadata):
-    if node.has_bundle('restic'):
-        metadata.setdefault('restic', {})
-        metadata['restic']['backup_folders'] = metadata['restic'].get('backup_folders', []) + [metadata.get('tftp', {}).get('root', '/srv/tftp/'), ]
+    if not node.has_bundle('restic'):
+        raise DoNotRunAgain
 
-    return metadata, DONE
+    return {
+        'restic': {
+            'backup_folders': [metadata.get('tftp/root', '/srv/tftp/'), ],
+        }
+    }
