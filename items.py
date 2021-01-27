@@ -1,3 +1,7 @@
+from bundlewrap.exceptions import BundleError
+
+if not node.has_bundle('xinetd'):
+    raise BundleError('you need to have xinetd enabled for this node')
 
 
 files = {
@@ -5,7 +9,7 @@ files = {
         'mode': '755',
         'content_type': 'jinja2',
         'triggers': [
-            "svc_systemd:xinetd:restart"
+            "svc_systemd:xinetd.service:restart"
         ],
     }
 }
